@@ -1,0 +1,12 @@
+actions:
+  qiime2-16s-pipeline:
+    check_installation: true
+    download_data: true
+    check_environment: true
+    run_basic_pipeline: true
+    data:
+      data_source: "moving-pictures-tutorial"
+      data_path: "moving-pictures/barcodes.fastq.gz"
+      data_url: "https://data.qiime2.org/2024.10/tutorials/moving-pictures/emp-single-end-sequences/barcodes.fastq.gz"
+      metadata_url: "https://data.qiime2.org/2024.10/tutorials/moving-pictures/sample_metadata.tsv"
+      metadata_path: "moving-pictures/sample-metadata.tsv"
