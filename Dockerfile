@@ -13,11 +13,16 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 
+
 ENV PATH /opt/conda/bin:$PATH
 
 COPY ./src /usr/local/bin/metagenimics16/src
-COPY main.py /usr/local/bin/metagenimics16/
+COPY ./main.py /usr/local/bin/metagenimics16/
 
+
+# Установка необходимых питонячих пакетов
+COPY ./requirements.txt /usr/local/bin/metagenimics16/
+RUN conda install -y -c conda-forge --file /usr/local/bin/metagenimics16/requirements.txt && conda clean -a
 
 RUN chmod +x /usr/local/bin/metagenimics16/main.py*
 
