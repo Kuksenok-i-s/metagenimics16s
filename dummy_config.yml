@@ -10,3 +10,82 @@ actions:
       data_url: "https://data.qiime2.org/2024.10/tutorials/moving-pictures/emp-single-end-sequences/barcodes.fastq.gz"
       metadata_url: "https://data.qiime2.org/2024.10/tutorials/moving-pictures/sample_metadata.tsv"
       metadata_path: "moving-pictures/sample-metadata.tsv"
+
+qiime_params:
+  validation_params:
+    show_metadata: true
+
+  demux_params:
+    run_demux: true
+    params:
+      demux_method: "paired-end"
+      demux_params:
+        demux_seq: "seq_file.fastq"
+        demux_qual: "qual_file.txt"
+        demux_barcode: "barcode_file.txt"
+        demux_trunc_len: 150
+        demux_max_ee: 2.0
+        demux_trunc_q: 20
+
+  denoise_params:
+    run_denoise: true
+    params:
+      trim_left: 10
+      trim_right: 10
+      trunc_len: 240
+      max_ee: 1.0
+      trunc_q: 30
+
+  deblur_params:
+    run_deblur: false
+    deblur_params:
+      trim_length: 200
+      min_reads: 10
+      min_size: 5
+
+  dada2_params:
+    run_dada2: true
+    params:
+      trim_left: 15
+      trim_right: 10
+      trunc_len: 220
+      max_ee: 1.5
+      trunc_q: 25
+      n_threads: 4
+
+  phylogeny_params:
+    run_phylogeny: true
+    params:
+      mafft_params:
+        n_threads: 8
+      mask_params:
+        min_conservation: 0.4
+      fasttree_params:
+        n_threads: 4
+        gtr: true
+
+  diversity_params:
+    run_diversity: true
+    params:
+      sampling_depth: 1000
+      alpha_metrics:
+        faith_pd: true
+        shannon: true
+        observed_features: true
+        evenness: false
+      beta_metrics:
+        unweighted_unifrac: true
+        weighted_unifrac: false
+        jaccard: true
+        bray_curtis: true
+      beta_group_significance:
+        permutations: 999
+        pairwise: true
+
+  alpha_rarefaction_params:
+    run_alpha_rarefaction: true
+    params:
+      max_depth: 1000
+      min_depth: 10
+      steps: 100
+      iterations: 10
