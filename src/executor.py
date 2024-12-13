@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 
 from qiime2 import Metadata, Artifact
+import qiime2.plugins.metadata.actions as metadata_actions
 import qiime2.plugins.demux.actions as demux_actions
 import qiime2.plugins.dada2.actions as dada2_actions
 import qiime2.plugins.phylogeny.actions as phylogeny_actions
@@ -43,7 +44,7 @@ class ExecutionHandler:
             trim_left=self.trim_left,
             trunc_len=self.trunc_len,
         )
-        stats_viz, = stats.view(Metadata).tabulate()
+        stats_viz, = metadata_actions.tabulate(input=stats.view(Metadata))
         logger.info("DADA2 quality control complete.")
         return table, rep_seqs, stats, stats_viz
 
@@ -64,7 +65,7 @@ class ExecutionHandler:
 
     def taxonomic_analysis(self, rep_seqs, table):
         taxonomy, = feature_classifier_actions.classify_sklearn(classifier=self.classifier, reads=rep_seqs)
-        taxonomy_viz, = taxonomy.view(Metadata).tabulate()
+        taxonomy_viz, = metadata_actions.tabulate(input=taxonomy.view(Metadata))
         barplot_viz, = taxa_actions.barplot(table=table, taxonomy=taxonomy, metadata=self.sample_metadata)
         logger.info("Taxonomic analysis complete.")
         return taxonomy, taxonomy_viz, barplot_viz
@@ -75,7 +76,7 @@ class ExecutionHandler:
         result, = composition_actions.ancombc(
             table=table,
             metadata=self.sample_metadata,
-            formula=grouping_field,
+            formula=grouping_field
         )
         logger.info("Differential abundance testing complete.")
         return result

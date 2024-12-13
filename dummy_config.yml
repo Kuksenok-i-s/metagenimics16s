@@ -50,9 +50,9 @@ qiime_params:
   dada2_params:
     run_dada2: true
     params:
-      trim_left: 15
+      trim_left: 0
       trim_right: 10
-      trunc_len: 220
+      trunc_len: 120
       max_ee: 1.5
       trunc_q: 25
       n_threads: 4
