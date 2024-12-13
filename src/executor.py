@@ -1,3 +1,6 @@
+import logging
+from pathlib import Path
+
 from qiime2 import Metadata, Artifact
 import qiime2.plugins.demux.actions as demux_actions
 import qiime2.plugins.dada2.actions as dada2_actions
@@ -7,15 +10,17 @@ import qiime2.plugins.feature_classifier.actions as feature_classifier_actions
 import qiime2.plugins.taxa.actions as taxa_actions
 import qiime2.plugins.composition.actions as composition_actions
 
+logger = logging.getLogger("DataHandler")
+
 
 class ExecutionHandler:
-    def __init__(self, config):
-        self.config = config.get_config()
+    def __init__(self, config, action: str):
+        self.config = config
 
-        data = self.config["actions"]["run_basic_pipeline"]["data"]
-        self.seqs_path = data["sequences"]
-        self.metadata_path = data["metadata"]
-        self.classifier_path = self.config["qiime_params"]["validation_params"].get("classifier")
+        data = self.config["actions"][action]["data"]
+        self.seqs_path = Path(data["data_source"]) / data["qza_sequences"]
+        self.metadata_path = Path(data["data_source"]) / data["metadata"]
+        self.classifier_path = Path(data["data_source"]) / data["classifier"]
 
         self.trim_left = self.config["qiime_params"]["dada2_params"]["params"]["trim_left"]
         self.trunc_len = self.config["qiime_params"]["dada2_params"]["params"]["trunc_len"]
@@ -29,7 +34,7 @@ class ExecutionHandler:
         barcode_sequence = self.sample_metadata.get_column("barcode-sequence")
         demux, demux_details = demux_actions.emp_single(seqs=self.seqs, barcodes=barcode_sequence)
         demux_summary, = demux_actions.summarize(data=demux)
-        print("Demultiplexing complete.")
+        logger.info("Demultiplexing complete.")
         return demux, demux_summary
 
     def quality_control_dada2(self, demux):
@@ -39,12 +44,12 @@ class ExecutionHandler:
             trunc_len=self.trunc_len,
         )
         stats_viz, = stats.view(Metadata).tabulate()
-        print("DADA2 quality control complete.")
+        logger.info("DADA2 quality control complete.")
         return table, rep_seqs, stats, stats_viz
 
     def phylogenetic_analysis(self, rep_seqs):
         results = phylogeny_actions.align_to_tree_mafft_fasttree(sequences=rep_seqs)
-        print("Phylogenetic tree generation complete.")
+        logger.info("Phylogenetic tree generation complete.")
         return results.alignment, results.masked_alignment, results.tree, results.rooted_tree
 
     def diversity_analysis(self, table, rooted_tree):
@@ -54,14 +59,14 @@ class ExecutionHandler:
             sampling_depth=self.sampling_depth,
             metadata=self.sample_metadata,
         )
-        print("Diversity analysis complete.")
+        logger.info("Diversity analysis complete.")
         return results
 
     def taxonomic_analysis(self, rep_seqs, table):
         taxonomy, = feature_classifier_actions.classify_sklearn(classifier=self.classifier, reads=rep_seqs)
         taxonomy_viz, = taxonomy.view(Metadata).tabulate()
         barplot_viz, = taxa_actions.barplot(table=table, taxonomy=taxonomy, metadata=self.sample_metadata)
-        print("Taxonomic analysis complete.")
+        logger.info("Taxonomic analysis complete.")
         return taxonomy, taxonomy_viz, barplot_viz
 
     def differential_abundance_analysis(self, table, grouping_field, level=None):
@@ -72,20 +77,15 @@ class ExecutionHandler:
             metadata=self.sample_metadata,
             formula=grouping_field,
         )
-        print("Differential abundance testing complete.")
+        logger.info("Differential abundance testing complete.")
         return result
 
     def run_workflow(self):
         demux, demux_summary = self.demultiplex_sequences()
-
         table, rep_seqs, stats, stats_viz = self.quality_control_dada2(demux)
-
         alignment, masked_alignment, unrooted_tree, rooted_tree = self.phylogenetic_analysis(rep_seqs)
-
         diversity_results = self.diversity_analysis(table, rooted_tree)
-
         taxonomy, taxonomy_viz, barplot_viz = self.taxonomic_analysis(rep_seqs, table)
-
         diff_abundance = self.differential_abundance_analysis(table, "body-site")
 
         return {

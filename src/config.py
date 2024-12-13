@@ -1,6 +1,7 @@
 import yaml
-from pathlib import Path
 import schema
+
+from pathlib import Path
 
 
 class Config:
@@ -21,10 +22,15 @@ class Config:
                         "run_basic_pipeline": bool,
                         "data": {
                             "data_source": str,
-                            "basic_url": str,
+                            "base_urls":
+                                {"ngs": str,
+                                 "classifier": str
+                                 },
                             "barcodes": str,
                             "metadata": str,
                             "sequences": str,
+                            "classifier": str,
+                            "qza_sequences": str
                         },
                     }
                 }
