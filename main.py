@@ -1,8 +1,21 @@
-#!/usr/bin/python
+import logging
 
-from src.config import Config
-from src.data_handler import DataHandler
-config = Config("dummy_config.yml")
+from src import Config, DataHandler, ExecutionHandler
 
-dh = DataHandler(config)
-dh.run()
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("MainWorkflow")
+
+
+def main():
+    action = "qiime2-16s-pipeline"
+    config = Config("dummy_config.yml").get_config()
+
+    data_handler = DataHandler(config, action=action)
+    computation_handler = ExecutionHandler(config, action=action)
+    results = computation_handler.run_workflow(save_all_results=True)
+
+    print(results)
+
+
+if __name__ == "__main__":
+    main()

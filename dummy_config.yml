@@ -6,10 +6,14 @@ actions:
     run_basic_pipeline: true
     data:
       data_source: "moving-pictures-tutorial"
-      data_path: "moving-pictures/barcodes.fastq.gz"
-      data_url: "https://data.qiime2.org/2024.10/tutorials/moving-pictures/emp-single-end-sequences/barcodes.fastq.gz"
-      metadata_url: "https://data.qiime2.org/2024.10/tutorials/moving-pictures/sample_metadata.tsv"
-      metadata_path: "moving-pictures/sample-metadata.tsv"
+      base_urls:
+        ngs: "https://data.qiime2.org/2024.10/tutorials/moving-pictures/"
+        classifier: "https://data.qiime2.org/classifiers/sklearn-1.4.2/greengenes/"
+      barcodes: "emp-single-end-sequences/barcodes.fastq.gz"
+      metadata: "sample_metadata.tsv"
+      sequences: "emp-single-end-sequences/sequences.fastq.gz"
+      classifier: "gg-13-8-99-515-806-nb-classifier.qza"
+      qza_sequences: "emp-single-end-sequences.qza"
 
 qiime_params:
   validation_params:
@@ -46,9 +50,9 @@ qiime_params:
   dada2_params:
     run_dada2: true
     params:
-      trim_left: 15
+      trim_left: 0
       trim_right: 10
-      trunc_len: 220
+      trunc_len: 120
       max_ee: 1.5
       trunc_q: 25
       n_threads: 4

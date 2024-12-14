@@ -1,6 +1,7 @@
 import yaml
-from pathlib import Path
 import schema
+
+from pathlib import Path
 
 
 class Config:
@@ -12,7 +13,6 @@ class Config:
 
     def __validate_config(self):
         try:
-            # Define the actions schema
             actions_schema = schema.Schema(
                 {
                     str: {
@@ -22,16 +22,20 @@ class Config:
                         "run_basic_pipeline": bool,
                         "data": {
                             "data_source": str,
-                            "data_path": str,
-                            "data_url": str,
-                            "metadata_url": str,
-                            "metadata_path": str,
+                            "base_urls":
+                                {"ngs": str,
+                                 "classifier": str
+                                 },
+                            "barcodes": str,
+                            "metadata": str,
+                            "sequences": str,
+                            "classifier": str,
+                            "qza_sequences": str
                         },
                     }
                 }
             )
 
-            # Define shared schemas for reuse
             shared_denoise_params = {
                 "trim_left": int,
                 "trim_right": int,
@@ -54,12 +58,9 @@ class Config:
                 "bray_curtis": bool,
             }
 
-            # Define the qiime_params schema
             qiime_params_schema = schema.Schema(
                 {
-                    "validation_params": {
-                        "show_metadata": bool,
-                    },
+                    "validation_params": {"show_metadata": bool},
                     "demux_params": {
                         "run_demux": bool,
                         "params": {
@@ -122,7 +123,6 @@ class Config:
                 }
             )
 
-            # Combine the schemas
             config_schema = schema.Schema(
                 {
                     schema.Optional("actions"): actions_schema,
