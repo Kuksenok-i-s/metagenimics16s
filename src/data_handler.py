@@ -65,7 +65,7 @@ class DataHandler:
         fmt.sequences.write_data(str(downloads[1]), FastqGzFormat)  # sequences
         Metadata.load(downloads[2])  # metadata
         Path(downloads[3]).resolve(strict=True)  # classifier
-        fmt.validate()
+        fmt.validate() # run validation
 
     def import_sequences(self) -> None:
         data = self.config["actions"][self.action]["data"]
