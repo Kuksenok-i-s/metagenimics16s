@@ -1,7 +1,8 @@
 import logging
+from os import makedirs
 from pathlib import Path
 
-from qiime2 import Metadata, Artifact
+from qiime2 import Metadata, Artifact, Visualization
 import qiime2.plugins.metadata.actions as metadata_actions
 import qiime2.plugins.demux.actions as demux_actions
 import qiime2.plugins.dada2.actions as dada2_actions
@@ -30,6 +31,9 @@ class ExecutionHandler:
         self.seqs = Artifact.load(self.seqs_path)
         self.sample_metadata = Metadata.load(self.metadata_path)
         self.classifier = Artifact.load(self.classifier_path)
+
+        self.output_dir = Path(data["data_source"]) / 'workflow_output'
+        makedirs(self.output_dir, exist_ok=True)
 
     def demultiplex_sequences(self):
         barcode_sequence = self.sample_metadata.get_column("barcode-sequence")
@@ -81,19 +85,47 @@ class ExecutionHandler:
         logger.info("Differential abundance testing complete.")
         return result
 
-    def run_workflow(self):
+    def run_workflow(self, save_all_results: bool = True):
         demux, demux_summary = self.demultiplex_sequences()
         table, rep_seqs, stats, stats_viz = self.quality_control_dada2(demux)
         alignment, masked_alignment, unrooted_tree, rooted_tree = self.phylogenetic_analysis(rep_seqs)
         diversity_results = self.diversity_analysis(table, rooted_tree)
         taxonomy, taxonomy_viz, barplot_viz = self.taxonomic_analysis(rep_seqs, table)
-        diff_abundance = self.differential_abundance_analysis(table, "body-site")
+        diff_abundance = self.differential_abundance_analysis(table, 'subject')
 
-        return {
-            "demux_summary": demux_summary,
-            "stats_viz": stats_viz,
-            "diversity_results": diversity_results,
-            "taxonomy_viz": taxonomy_viz,
-            "barplot_viz": barplot_viz,
-            "diff_abundance": diff_abundance,
+        entities_to_return = {
+            'demux': demux,
+            'demux_summary': demux_summary,  # Visualization
+            'table': table,
+            'rep_seqs': rep_seqs,
+            'stats': stats,
+            'stats_viz': stats_viz,  # Visualization
+            'alignment': alignment,
+            'masked_alignment': masked_alignment,
+            'unrooted_tree': unrooted_tree,
+            'rooted_tree': rooted_tree,
+            'diversity_results': diversity_results,  # Results, mixed
+            'taxonomy': taxonomy,
+            'taxonomy_viz': taxonomy_viz,  # Visualization
+            'barplot_viz': barplot_viz,  # Visualization
+            'diff_abundance': diff_abundance
         }
+
+        if save_all_results:
+            for name, entity in entities_to_return.items():
+                if name == 'diversity_results':  # Results class instance (qiime2/sdk/results.py)
+                    for sub_entity, sub_name in zip(entity, entity._fields):
+                        self._save_entity(sub_entity, sub_name)
+                else:
+                    self._save_entity(entity, name)
+
+        return entities_to_return
+
+    def _save_entity(self, entity, name):
+        if isinstance(entity, Artifact):
+            out_file = f'{name}.qza'
+        elif isinstance(entity, Visualization):
+            out_file = f'{name}.qzv'
+        out_path = self.output_dir / out_file
+        entity.save(out_path)
+

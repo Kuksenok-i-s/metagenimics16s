@@ -12,7 +12,7 @@ def main():
 
     data_handler = DataHandler(config, action=action)
     computation_handler = ExecutionHandler(config, action=action)
-    results = computation_handler.run_workflow()
+    results = computation_handler.run_workflow(save_all_results=True)
 
     print(results)
 
